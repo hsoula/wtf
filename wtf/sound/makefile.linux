@@ -1,0 +1,40 @@
+CC=gcc
+CFLAGS= -fPIC
+files_gen=spectrum.o utils.o 
+files_bga = bga.o fit.o  optim.o
+
+mac_include=-I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7 -I/Library/Python/2.7/site-packages/numpy/core/include
+mac_libs= -lmo_gen -lmo_bga -lgsl -lcblas -framework Python -lsndfile
+mac_libs_dir=-L./
+
+
+
+linux_include=-I/usr/include/python2.7/ -I/usr/include/ -I/usr/lib64/python/site-packages/numpy/core/include/ 
+linux_libs= -lmo_bga -lmo_gen -lgsl -lgslcblas -lpython2.7 -lsndfile
+linux_libs_dir= -L./ -L/usr/lib/ -L/usr/lib64/
+
+all: libmo_gen.a libmo_bga.a mo_bga.so
+
+mo_bga.c: mo_bga.pyx
+	cython mo_bga.pyx
+
+mo_bga.o: mo_bga.c
+	$(CC) $(CFLAGS) $(linux_include) -c -o mo_bga.o mo_bga.c 
+
+mo_bga.so: mo_bga.o libmo_bga.a	 libmo_gen.a
+	gcc -shared mo_bga.o -o mo_bga.so $(linux_libs)  $(linux_libs_dir)
+
+$(filter %.o,$(files_gen)): %.o: %.c %.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(filter %.o,$(files_bga)): %.o: %.c %.h
+	$(CC) -c $(CFLAGS) $< -o $@ $(stfor_include)
+
+libmo_bga.a: $(files_bga)
+	ar rus libmo_bga.a $(files_bga)
+
+libmo_gen.a: $(files_gen)
+	ar rus libmo_gen.a $(files_gen)
+
+clean:
+	rm -f *.o *.so
