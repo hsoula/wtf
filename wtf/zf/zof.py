@@ -9,7 +9,7 @@ import pysndfile
 import sys
 
 sys.path.append("../")
-from sound import specs
+from wtf.sound import specs
 
 
 class zof_chunk(object):
